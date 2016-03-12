@@ -4,7 +4,10 @@ var http = require("http");
 var Chatadelic_api = function(){
     var self=this;
 
-    var ws=new WebSocket("ws://chatadelic.net:8181/server/ws");
+    var ws = new WebSocket("ws://chatadelic.net:8181/server/ws");
+    ws.onmessage = function (e) {
+        console.log(e.data)
+    };
     var _sid=null;
     var _username=null;
     var _password=null;
@@ -16,80 +19,63 @@ var Chatadelic_api = function(){
     var _queue_interval_timeout=null;
 
     /**
-     * Chatadelic actions (like send message, login, etc)
+     * Bot conf actions
      * @type {Object}
+     * @private
      */
-    var _act={};
+    var _conf = {};
 
     /**
-     * Set/get queue execution interval
-     * @param  {int} interval
-     * @param {function} [callbacl]
-     * @return {int}
+     * @param  {int} arg
+     * @private
      */
-    _act.queueInterval=function(arg,callback){
-        callback = callback || function(){};
+    _conf.queueInterval = function (arg) {
         if(arg!==undefined && arg!==null && arg>=0){
             _queue_interval=arg;
         }
-        callback(_queue_interval);
-        return _queue_interval;
     };
-    
+
     /**
-     * Set/get chat id
-     * @param {int} arg
-     * @param {function} [callbacl]
-     * @returns {int}
+     * @param {number} arg
+     * @private
      */
-    _act.chat=function(arg,callback){
-        callback = callback || function(){};
+    _conf.chat = function (arg) {
         if(arg!==undefined && arg!==null && arg>=0){
             _chat=arg;
         }
-        callback(_chat);
-        return _chat;
     };
 
     /**
-     * Set/get username
      * @param {string} arg
-     * @param {function} [callbacl]
-     * @returns {string}
+     * @private
      */
-    _act.username=function(arg,callback){
-        callback = callback || function(){};
+    _conf.username = function (arg) {
         if(arg!==undefined && arg!==null && arg!==""){
             _username=arg;
         }
-        callback(_username);
-        return _username;
     };
 
     /**
-     * Set password
-     * @param {string} arg
-     * @param {function} [callbacl]
-     * @returns {}
+     * @param {string} arg=
+     * @private
      */
-    _act.password=function(arg,callback){
-        callback = callback || function(){};
+    _conf.password = function (arg) {
         if(arg!==undefined && arg!==null && arg!==""){
             _password=arg;
         }
-        callback();
-        return;
     };
 
     /**
      * Login into chat and get chatadelic response with session token
      * @param {function} [callback]
+     * @private
      */
     var auth = function(callback){
         callback = callback || function(){};
         if(!_username || !_password || !_chat)
             throw "C_API _auth: no username/password/chat.";
-        var data = "chat="+_chat+"&login="+encodeURI(_username)+"&password="+encodeURI(_password);
+        var data = "chat=" + _chat + "&login=" + encodeURI(_username) + "&password=" + encodeURI(_password) + (_sid ? "&_=" + _sid : "");
+        console.log(data);
         var req = http.request({
             host: 'chatadelic.net',
             path: '/login/chatLogin',
@@ -107,6 +93,7 @@ var Chatadelic_api = function(){
         }, function(res){
             res.setEncoding('utf8');
             res.on('data', function (chunk) {
+                console.log(chunk);
                 var r=JSON.parse(chunk);
                 callback(r);
             });
@@ -116,16 +103,26 @@ var Chatadelic_api = function(){
     };
 
     /**
+     * Chatadelic actions (like send message, login, etc)
+     * @type {Object}
+     * @private
+     */
+    var _act = {};
+
+    /**
      * Login into chat
      * @param {string} data
      * @param {function} [callback]
+     * @private
      */
     _act.login = function(data, callback){
         callback = callback || function(){};
         auth(function(e){
             if(!e._)
                 throw "C_API _act.login: login failed (no sid).";
+            console.log(_sid);
             _sid=e._;
+            console.log(_sid);
             ws.send(JSON.stringify({
                 _com:1,
                 chat:_chat,
@@ -140,6 +137,7 @@ var Chatadelic_api = function(){
      *  Logout from chat
      *  @param {string} data
      *  @param {function} [callback]
+     *  @private
      */
     _act.logout = function(data, callback){
         callback = callback || function(){};
@@ -155,6 +153,7 @@ var Chatadelic_api = function(){
      * Send message
      * @param  {string} message
      * @param  {function} [callback]
+     * @private
      */
     _act.message = function(message, callback){
         if(!message)return;
@@ -169,13 +168,14 @@ var Chatadelic_api = function(){
 
     /**
      * Add chatadelic act to queue
-     * @param  {string} type 
+     * @param  {string} type
      * @param  {string} [data]
      * @param {function} [callback]
+     * @public
      */
     this.queueAdd = function(type, data, callback){
         console.log("queueadd",type,data);
-        if(!_act.hasOwnProperty(type))
+        if (!_act.hasOwnProperty(type) && !_conf.hasOwnProperty(type))
             throw "C_API queueAdd: invalid type";
         _queue.push({type:type,data:data,callback:callback||function(){}});
         _execQueue();
@@ -183,7 +183,8 @@ var Chatadelic_api = function(){
 
     /**
      * Execute added to queue acts
-     * @param {bool} [ontimeout=false]
+     * @param {boolean} [ontimeout=false]
+     * @private
      */
     var _execQueue = function(ontimeout){
         if(ontimeout!==true && _queue_interval_timeout!==null){
@@ -191,18 +192,27 @@ var Chatadelic_api = function(){
         }
         if(_queue.length===0){
             _queue_interval_timeout = null;
-            return;
+
         }
         else{
-            console.log("can i hav act",_queue[0].type,_queue[0].data);
-            if(!_act.hasOwnProperty(_queue[0].type))
-                throw "C_API _execQueue: invalid type";
+            if (_act.hasOwnProperty(_queue[0].type))
             _act[_queue[0].type](_queue[0].data,function(e){
-                console.log("act exec'd",e);
                 _queue[0].callback(e);
                 _queue.shift();
                 _queue_interval_timeout=setTimeout(function(){_execQueue(true);}, _queue_interval);
             });
+            else if (_conf.hasOwnProperty(_queue[0].type)) {
+                _conf[_queue[0].type](_queue[0].data);
+                _queue[0].callback();
+                _queue.shift();
+                _queue_interval_timeout = setTimeout(function () {
+                    _execQueue(true);
+                }, 20);
+            }
+            else {
+                console.log(_queue[0]);
+                throw "C_API _execQueue: invalid type";
+            }
         }
     };
 };
