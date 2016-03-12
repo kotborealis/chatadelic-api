@@ -183,8 +183,12 @@ var Chatadelic_api = function(){
 
     /**
      * Execute added to queue acts
+     * @param {bool} [ontimeout=false]
      */
-    var _execQueue = function(){
+    var _execQueue = function(ontimeout){
+        if(ontimeout!==true && _queue_interval_timeout!==null){
+            return;
+        }
         if(_queue.length===0){
             _queue_interval_timeout = null;
             return;
@@ -197,7 +201,7 @@ var Chatadelic_api = function(){
                 console.log("act exec'd",e);
                 _queue[0].callback(e);
                 _queue.shift();
-                _queue_interval_timeout=setTimeout(_execQueue, _queue_interval);
+                _queue_interval_timeout=setTimeout(function(){_execQueue(true);}, _queue_interval);
             });
         }
     };
