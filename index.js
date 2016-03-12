@@ -10,6 +10,7 @@ var Chatadelic_api = function(){
     var _username=null;
     var _password=null;
     var _chat=null;
+    var _msg_id=0;
 
     /**
      * Set/get chat
@@ -106,11 +107,35 @@ var Chatadelic_api = function(){
         });
     };
 
+    /**
+     *  Logout from chat
+     *  @param {function} [callback]
+     */
     this.logout = function(callback){
+        callback = callback || function(){};
         self.ws.send(JSON.stringify({
+            chat:_chat,
+            act:"logout",
+            _id: _msg_id++
+        }),callback);
+    };
 
-        }));
-    }
+    /**
+     * Send message
+     * @param  {string} message
+     * @param  {function} [callbac]
+     */
+    this.send = function(message, callback){
+        if(!data)return;
+        self.ws.send(JSON.stringify({
+            chat:_chat,
+            act:"msg",
+            msg:message,
+            _id:_msg_id++
+        }),callback);
+    };
+
+    
 };
 
 module.exports = Chatadelic_api;
