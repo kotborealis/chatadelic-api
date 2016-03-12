@@ -167,6 +167,67 @@ var Chatadelic_api = function(){
     };
 
     /**
+     * Set queue execution interval
+     * @param {number} data
+     * @param {function} [callback]
+     */
+    this.queueInterval = function (data, callback) {
+        self.queueAdd("queueInterval", data, callback);
+    };
+
+    /**
+     * Set chat id
+     * @param {number} data
+     * @param {function} [callback]
+     */
+    this.chat = function (data, callback) {
+        self.queueAdd("chat", data, callback);
+    };
+
+    /**
+     * Set username
+     * @param {string} data
+     * @param {function} [callback]
+     */
+    this.username = function (data, callback) {
+        self.queueAdd("username", data, callback);
+    };
+
+    /**
+     * Set password
+     * @param {string} data
+     * @param {function} [callback]
+     */
+    this.password = function (data, callback) {
+        self.queueAdd("password", data, callback);
+    };
+
+    /**
+     * Login
+     * @param {function} [callback]
+     */
+    this.login = function (callback) {
+        self.queueAdd("login", "", callback);
+    };
+
+    /**
+     * Logout
+     * @param {function} [callback]
+     */
+    this.logout = function (callback) {
+        self.queueAdd("logout", "", callback);
+    };
+
+    /**
+     * Send message
+     * @param {string} data
+     * @param {function} [callback]
+     */
+    this.message = function (data, callback) {
+        self.queueAdd("message", data, callback);
+    };
+
+    /**
      * Add chatadelic act to queue
      * @param  {string} type
      * @param  {string} [data]
