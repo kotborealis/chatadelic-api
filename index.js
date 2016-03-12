@@ -101,7 +101,6 @@ var Chatadelic_api = function(){
         if(!_username || !_password || !_chat)
             throw "C_API _auth: no username/password/chat.";
         var data = "chat=" + _chat + "&login=" + encodeURI(_username) + "&password=" + encodeURI(_password) + (_sid ? "&_=" + _sid : "");
-        console.log(data);
         var req = http.request({
             host: 'chatadelic.net',
             path: '/login/chatLogin',
@@ -119,7 +118,6 @@ var Chatadelic_api = function(){
         }, function(res){
             res.setEncoding('utf8');
             res.on('data', function (chunk) {
-                console.log(chunk);
                 var r=JSON.parse(chunk);
                 callback(r);
             });
@@ -146,9 +144,7 @@ var Chatadelic_api = function(){
         _auth(function (e) {
             if(!e._)
                 throw "C_API _act.login: login failed (no sid).";
-            console.log(_sid);
             _sid=e._;
-            console.log(_sid);
             ws.send(JSON.stringify({
                 _com:1,
                 chat:_chat,
@@ -188,6 +184,23 @@ var Chatadelic_api = function(){
             act:"msg",
             msg:message,
             _id:_msg_id++
+        }));
+        callback();
+    };
+
+    /**
+     * Send private message to user
+     * @param {array} args (user, message)
+     * @param {function} [callback]
+     */
+    _act.privateMessage = function (args, callback) {
+        if (!args || !args[0] || !args[1])return;
+        ws.send(JSON.stringify({
+            chat: _chat,
+            act: "msg",
+            msg: args[1],
+            to: args[0],
+            _id: _msg_id++
         }));
         callback();
     };
@@ -254,6 +267,16 @@ var Chatadelic_api = function(){
     };
 
     /**
+     * Send private message to user
+     * @param user
+     * @param message
+     * @param callback
+     */
+    this.privateMessage = function (user, message, callback) {
+        self.queueAdd("privateMessage", [user, message], callback);
+    };
+
+    /**
      * Add chatadelic act to queue
      * @param  {string} type
      * @param  {string} [data]
@@ -261,7 +284,6 @@ var Chatadelic_api = function(){
      * @public
      */
     this.queueAdd = function(type, data, callback){
-        console.log("queueadd",type,data);
         if (!_act.hasOwnProperty(type) && !_conf.hasOwnProperty(type))
             throw "C_API queueAdd: invalid type";
         _queue.push({type:type,data:data,callback:callback||function(){}});
@@ -300,7 +322,6 @@ var Chatadelic_api = function(){
                 }, 20);
             }
             else {
-                console.log(_queue[0]);
                 throw "C_API _execQueue: invalid type";
             }
         }
