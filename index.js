@@ -4,10 +4,41 @@ var http = require("http");
 var Chatadelic_api = function(){
     var self=this;
 
-    var ws = new WebSocket("ws://chatadelic.net:8181/server/ws");
-    ws.onmessage = function (e) {
-        console.log(e.data)
+    /**
+     * @param {Object} e - event
+     */
+    this.onopen = function (e) {
     };
+    /**
+     * @param {Object} e - event
+     */
+    this.onmessage = function (e) {
+    };
+    /**
+     * @param {Object} e - event
+     */
+    this.onlogin = function (e) {
+    };
+    /**
+     * @param {Object} e - event
+     */
+    this.onlogout = function (e) {
+    };
+
+    var ws = new WebSocket("ws://chatadelic.net:8181/server/ws");
+
+    ws.onopen = function () {
+        self.onopen({});
+        ws.onmessage = function (e) {
+            var data = JSON.parse(e.data);
+            if (Array.isArray(data)) {
+                for (var i = 0; i < data.length; i++) {
+                    _handleData(data[i]);
+                }
+            }
+        };
+    };
+
     var _sid=null;
     var _username=null;
     var _password=null;
@@ -18,11 +49,6 @@ var Chatadelic_api = function(){
     var _queue_interval=500;
     var _queue_interval_timeout=null;
 
-    /**
-     * Bot conf actions
-     * @type {Object}
-     * @private
-     */
     var _conf = {};
 
     /**
@@ -70,7 +96,7 @@ var Chatadelic_api = function(){
      * @param {function} [callback]
      * @private
      */
-    var auth = function(callback){
+    var _auth = function (callback) {
         callback = callback || function(){};
         if(!_username || !_password || !_chat)
             throw "C_API _auth: no username/password/chat.";
@@ -117,7 +143,7 @@ var Chatadelic_api = function(){
      */
     _act.login = function(data, callback){
         callback = callback || function(){};
-        auth(function(e){
+        _auth(function (e) {
             if(!e._)
                 throw "C_API _act.login: login failed (no sid).";
             console.log(_sid);
@@ -256,12 +282,15 @@ var Chatadelic_api = function(){
 
         }
         else{
-            if (_act.hasOwnProperty(_queue[0].type))
-            _act[_queue[0].type](_queue[0].data,function(e){
-                _queue[0].callback(e);
-                _queue.shift();
-                _queue_interval_timeout=setTimeout(function(){_execQueue(true);}, _queue_interval);
-            });
+            if (_act.hasOwnProperty(_queue[0].type)) {
+                _act[_queue[0].type](_queue[0].data, function (e) {
+                    _queue[0].callback(e);
+                    _queue.shift();
+                    _queue_interval_timeout = setTimeout(function () {
+                        _execQueue(true);
+                    }, _queue_interval);
+                });
+            }
             else if (_conf.hasOwnProperty(_queue[0].type)) {
                 _conf[_queue[0].type](_queue[0].data);
                 _queue[0].callback();
@@ -276,6 +305,35 @@ var Chatadelic_api = function(){
             }
         }
     };
+
+    /**
+     * Handles data from chatadelic and calls events
+     * @param {object} data
+     * @private
+     */
+    var _handleData = function (data) {
+        if (data.t === "msg" && data.fl === "sys" && (data.type === "logout" || data.type === "login")) {
+            self["on" + data.type]({
+                user: data.from,
+                ts: data.ts
+            });
+        }
+        else if (data.t === "msg" && !!data.c) {
+            self.onmessage({
+                private: true,
+                user: data.from,
+                text: data.text,
+                ts: data.ts
+            });
+        }
+        else if (data.t === "msg") {
+            self.onmessage({
+                user: data.from,
+                text: data.text,
+                ts: data.ts
+            });
+        }
+    }
 };
 
 module.exports = Chatadelic_api;
