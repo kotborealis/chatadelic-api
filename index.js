@@ -5,21 +5,25 @@ var Chatadelic_api = function(){
     var self=this;
 
     /**
+     * Event on websocket open
      * @param {Object} e - event
      */
     this.onopen = function (e) {
     };
     /**
+     * Event on chat message
      * @param {Object} e - event
      */
     this.onmessage = function (e) {
     };
     /**
+     * Event on user login
      * @param {Object} e - event
      */
     this.onlogin = function (e) {
     };
     /**
+     * Event on user logout
      * @param {Object} e - event
      */
     this.onlogout = function (e) {
