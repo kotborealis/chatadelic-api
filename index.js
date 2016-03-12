@@ -5,7 +5,6 @@ var Chatadelic_api = function(){
     var self=this;
 
     var ws=new WebSocket("ws://chatadelic.net:8181/server/ws");
-    ws.onmessage=function(e){console.log(e.data);}
     var _sid=null;
     var _username=null;
     var _password=null;
@@ -23,7 +22,7 @@ var Chatadelic_api = function(){
     var _act={};
 
     /**
-     * Set queue execution interval
+     * Set/get queue execution interval
      * @param  {int} interval
      * @param {function} [callbacl]
      * @return {int}
@@ -36,8 +35,9 @@ var Chatadelic_api = function(){
         callback(_queue_interval);
         return _queue_interval;
     };
+    
     /**
-     * Set/get chat
+     * Set/get chat id
      * @param {int} arg
      * @param {function} [callbacl]
      * @returns {int}
