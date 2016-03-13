@@ -194,7 +194,7 @@ var Chatadelic_api = function(){
 
     /**
      * Send private message to user
-     * @param {array} args (user, message)
+     * @param {Object} args (user, message)
      * @param {function} [callback]
      */
     _act.privateMessage = function (args, callback) {
@@ -276,7 +276,10 @@ var Chatadelic_api = function(){
      * @param {function} [callback]
      */
     this.message = function (data, callback) {
-        self.queueAdd("message", data, callback);
+        var arr = data.match(/.{1,300}/g);
+        for (var i = 0; i < arr.length; i++) {
+            self.queueAdd("message", arr[i], callback);
+        }
     };
 
     /**
@@ -286,7 +289,10 @@ var Chatadelic_api = function(){
      * @param callback
      */
     this.privateMessage = function (user, message, callback) {
-        self.queueAdd("privateMessage", [user, message], callback);
+        var arr = message.match(/.{1,300}/g);
+        for (var i = 0; i < arr.length; i++) {
+            self.queueAdd("privateMessage", [user, arr[i]], callback);
+        }
     };
 
     /**
@@ -346,16 +352,15 @@ var Chatadelic_api = function(){
      * @private
      */
     var _handleData = function (data) {
-        if (data.t === "msg" && data.fl === "sys" && (data.type === "logout" || data.type === "login")) {
-            self["on" + data.type]({
-                user: data.from,
-                ts: data.ts
+        if (data.t === "user" && (data.event === "IN" || data.event === "OUT")) {
+            self["onlog" + data.event.toLowerCase()]({
+                user: data.user.name
             });
         }
         else if (data.t === "msg" && !!data.c) {
             self.onmessage({
                 private: true,
-                referring: data.text.indexOf(_username + ", ") >= 0 ? true : false,
+                referring: data.text.indexOf(_username + ", ") >= 0,
                 user: data.from,
                 text: data.text,
                 ts: data.ts
@@ -364,7 +369,7 @@ var Chatadelic_api = function(){
         else if (data.t === "msg") {
             self.onmessage({
                 private: false,
-                referring: data.text.indexOf(_username + ", ") >= 0 ? true : false,
+                referring: data.text.indexOf(_username + ", ") >= 0,
                 user: data.from,
                 text: data.text,
                 ts: data.ts
