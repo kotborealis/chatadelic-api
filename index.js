@@ -86,7 +86,7 @@ var Chatadelic_api = function(){
     };
 
     /**
-     * @param {string} arg=
+     * @param {string} arg
      * @private
      */
     _conf.password = function (arg) {
