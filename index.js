@@ -211,29 +211,38 @@ var Chatadelic_api = function(){
 
     /**
      * Set queue execution interval
-     * @param {number} data
+     * If data and callback === undefined returns queue interval
+     * @param {string} [data]
      * @param {function} [callback]
+     * @returns {string} username
      */
     this.queueInterval = function (data, callback) {
         self.queueAdd("queueInterval", data, callback);
+        if (!data && !callback)return _queue_interval;
     };
 
     /**
      * Set chat id
-     * @param {number} data
+     * If data and callback === undefined returns chat id
+     * @param {string} [data]
      * @param {function} [callback]
+     * @returns {string} username
      */
     this.chat = function (data, callback) {
         self.queueAdd("chat", data, callback);
+        if (!data && !callback)return _chat;
     };
 
     /**
      * Set username
-     * @param {string} data
+     * If data and callback === undefined returns username
+     * @param {string} [data]
      * @param {function} [callback]
+     * @returns {string} username
      */
     this.username = function (data, callback) {
         self.queueAdd("username", data, callback);
+        if (!data && !callback)return _username;
     };
 
     /**
@@ -346,6 +355,7 @@ var Chatadelic_api = function(){
         else if (data.t === "msg" && !!data.c) {
             self.onmessage({
                 private: true,
+                referring: data.text.indexOf(_username + ", ") >= 0 ? true : false,
                 user: data.from,
                 text: data.text,
                 ts: data.ts
@@ -353,6 +363,8 @@ var Chatadelic_api = function(){
         }
         else if (data.t === "msg") {
             self.onmessage({
+                private: false,
+                referring: data.text.indexOf(_username + ", ") >= 0 ? true : false,
                 user: data.from,
                 text: data.text,
                 ts: data.ts
