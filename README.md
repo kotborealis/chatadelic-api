@@ -13,14 +13,17 @@
 <dt><a href="#onlogout">onlogout(e)</a></dt>
 <dd><p>Event on user logout</p>
 </dd>
-<dt><a href="#queueInterval">queueInterval(data, [callback])</a></dt>
-<dd><p>Set queue execution interval</p>
+<dt><a href="#queueInterval">queueInterval([data], [callback])</a> ⇒ <code>string</code></dt>
+<dd><p>Set queue execution interval
+If data and callback === undefined returns queue interval</p>
 </dd>
-<dt><a href="#chat">chat(data, [callback])</a></dt>
-<dd><p>Set chat id</p>
+<dt><a href="#chat">chat([data], [callback])</a> ⇒ <code>string</code></dt>
+<dd><p>Set chat id
+If data and callback === undefined returns chat id</p>
 </dd>
-<dt><a href="#username">username(data, [callback])</a></dt>
-<dd><p>Set username</p>
+<dt><a href="#username">username([data], [callback])</a> ⇒ <code>string</code></dt>
+<dd><p>Set username
+If data and callback === undefined returns username</p>
 </dd>
 <dt><a href="#password">password(data, [callback])</a></dt>
 <dd><p>Set password</p>
@@ -83,36 +86,42 @@ Event on user logout
 | e | <code>Object</code> | event |
 
 <a name="queueInterval"></a>
-## queueInterval(data, [callback])
+## queueInterval([data], [callback]) ⇒ <code>string</code>
 Set queue execution interval
+If data and callback === undefined returns queue interval
 
 **Kind**: global function  
+**Returns**: <code>string</code> - username  
 
 | Param | Type |
 | --- | --- |
-| data | <code>number</code> | 
+| [data] | <code>string</code> | 
 | [callback] | <code>function</code> | 
 
 <a name="chat"></a>
-## chat(data, [callback])
+## chat([data], [callback]) ⇒ <code>string</code>
 Set chat id
+If data and callback === undefined returns chat id
 
 **Kind**: global function  
+**Returns**: <code>string</code> - username  
 
 | Param | Type |
 | --- | --- |
-| data | <code>number</code> | 
+| [data] | <code>string</code> | 
 | [callback] | <code>function</code> | 
 
 <a name="username"></a>
-## username(data, [callback])
+## username([data], [callback]) ⇒ <code>string</code>
 Set username
+If data and callback === undefined returns username
 
 **Kind**: global function  
+**Returns**: <code>string</code> - username  
 
 | Param | Type |
 | --- | --- |
-| data | <code>string</code> | 
+| [data] | <code>string</code> | 
 | [callback] | <code>function</code> | 
 
 <a name="password"></a>
