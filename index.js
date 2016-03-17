@@ -1,8 +1,12 @@
-var WebSocket = require("mokou-websocket");
-var http = require("http");
+const WebSocket = require("mokou-websocket");
+const Events = require('events');
+const util = require('util');
+const http = require("http");
 
 var Chatadelic_api = function(){
     var self=this;
+
+    var ws = new WebSocket("ws://chatadelic.net:8181/server/ws");
 
     /**
      * Event on websocket open
@@ -29,18 +33,25 @@ var Chatadelic_api = function(){
     this.onlogout = function (e) {
     };
 
-    var ws = new WebSocket("ws://chatadelic.net:8181/server/ws");
-
     ws.onopen = function () {
-        self.onopen({});
-        ws.onmessage = function (e) {
-            var data = JSON.parse(e.data);
+        self.emit('open');
+        self.onopen();
+        ws.on('message', function (e) {
+            var data = JSON.parse(e);
             if (Array.isArray(data)) {
                 for (var i = 0; i < data.length; i++) {
                     _handleData(data[i]);
                 }
             }
-        };
+        });
+        ws.on('close', function (e) {
+            self.emit('close', e);
+            self.onclose(e);
+        });
+        ws.on('error', function (e) {
+            self.emit('error', e);
+            self.onerror(e);
+        });
     };
 
     var _sid=null;
@@ -349,33 +360,46 @@ var Chatadelic_api = function(){
     /**
      * Handles data from chatadelic and calls events
      * @param {object} data
+     * @param data.t
+     * @param data.event
+     * @param data.from
+     * @param data.text
+     * @param data.ts
      * @private
      */
     var _handleData = function (data) {
+        var e;
         if (data.t === "user" && (data.event === "IN" || data.event === "OUT")) {
-            self["onlog" + data.event.toLowerCase()]({
+            e = {
                 user: data.user.name
-            });
+            };
+            self.emit('log' + data.event.toLowerCase(), e);
+            self["onlog" + data.event.toLowerCase()](e);
         }
         else if (data.t === "msg" && !!data.c) {
-            self.onmessage({
+            e = {
                 private: true,
                 referring: data.text.indexOf(_username + ", ") >= 0,
                 user: data.from,
                 text: data.text,
                 ts: data.ts
-            });
+            };
+            self.emit('message', e);
+            self.onmessage(e);
         }
         else if (data.t === "msg") {
-            self.onmessage({
+            e = {
                 private: false,
                 referring: data.text.indexOf(_username + ", ") >= 0,
                 user: data.from,
                 text: data.text,
                 ts: data.ts
-            });
+            };
+            self.emit('message', e);
+            self.onmessage(e);
         }
     }
 };
+util.inherits(Chatadelic_api, Events);
 
 module.exports = Chatadelic_api;
