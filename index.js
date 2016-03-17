@@ -38,6 +38,10 @@ var Chatadelic_api = function(){
         self.onopen();
         ws.on('message', function (e) {
             var data = JSON.parse(e);
+            if (!_online_inited) {
+                _initOnline(data);
+                return;
+            }
             if (Array.isArray(data)) {
                 for (var i = 0; i < data.length; i++) {
                     _handleData(data[i]);
@@ -59,6 +63,9 @@ var Chatadelic_api = function(){
     var _password=null;
     var _chat=null;
     var _msg_id=0;
+
+    var _online = [];
+    var _online_inited = false;
 
     var _queue=[];
     var _queue_interval=500;
@@ -163,7 +170,7 @@ var Chatadelic_api = function(){
             ws.send(JSON.stringify({
                 _com:1,
                 chat:_chat,
-                need:"",
+                need: "state",
                 sid:_sid
             }));
             callback(e);
@@ -321,6 +328,14 @@ var Chatadelic_api = function(){
     };
 
     /**
+     * Return online list
+     * @returns {Array}
+     */
+    this.online = function () {
+        return _online;
+    };
+
+    /**
      * Execute added to queue acts
      * @param {boolean} [ontimeout=false]
      * @private
@@ -365,22 +380,22 @@ var Chatadelic_api = function(){
      * @param data.from
      * @param data.text
      * @param data.ts
+     * @param data.user
+     * @param data.fromId
      * @private
      */
     var _handleData = function (data) {
         var e;
         if (data.t === "user" && (data.event === "IN" || data.event === "OUT")) {
-            e = {
-                user: data.user.name
-            };
+            e = data.user;
+            data.event === "IN" ? _addOnline(data) : _removeOnline(data);
             self.emit('log' + data.event.toLowerCase(), e);
             self["onlog" + data.event.toLowerCase()](e);
         }
         else if (data.t === "msg" && !!data.c) {
             e = {
                 private: true,
-                referring: data.text.indexOf(_username + ", ") >= 0,
-                user: data.from,
+                user: {name: data.from, regId: data.fromId ? data.fromId : -1},
                 text: data.text,
                 ts: data.ts
             };
@@ -390,7 +405,6 @@ var Chatadelic_api = function(){
         else if (data.t === "msg") {
             e = {
                 private: false,
-                referring: data.text.indexOf(_username + ", ") >= 0,
                 user: data.from,
                 text: data.text,
                 ts: data.ts
@@ -398,7 +412,47 @@ var Chatadelic_api = function(){
             self.emit('message', e);
             self.onmessage(e);
         }
-    }
+    };
+
+    /**
+     * Init online list
+     * @param data
+     * @private
+     */
+    var _initOnline = function (data) {
+        if (Array.isArray(data)) {
+            for (var i = 0; i < data.length; i++)
+                if (data[i].t === "user" && data[i].event === "IN")
+                    _addOnline(data[i]);
+        }
+        _online_inited = true;
+    };
+
+    /**
+     * Add user to online list
+     * @param data
+     * @private
+     */
+    var _addOnline = function (data) {
+        data.user.regId = data.user.regId ? data.user.regId : -1;
+        for (var j = 0; j < _online.length; j++)
+            if (_online[j].name === data.user.name && _online[j].regId === data.user.regId)
+                return;
+        _online.push(data.user);
+    };
+    /**
+     * Remove user from online list
+     * @param data
+     * @private
+     */
+    var _removeOnline = function (data) {
+        data.user.regId = data.user.regId ? data.user.regId : -1;
+        for (var j = 0; j < _online.length; j++)
+            if (_online[j].name === data.user.name && _online[j].regId === data.user.regId) {
+                _online.splice(j, 1);
+                break;
+            }
+    };
 };
 util.inherits(Chatadelic_api, Events);
 
