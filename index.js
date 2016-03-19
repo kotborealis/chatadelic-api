@@ -30,24 +30,28 @@ const ChatadelicApi = function () {
    * @param {Object} e - event
    */
   this.onopen = function (e) {
+    return e;
   };
   /**
    * Event on chat message
    * @param {Object} e - event
    */
   this.onmessage = function (e) {
+    return e;
   };
   /**
    * Event on user login
    * @param {Object} e - event
    */
   this.onlogin = function (e) {
+    return e;
   };
   /**
    * Event on user logout
    * @param {Object} e - event
    */
   this.onlogout = function (e) {
+    return e;
   };
 
   /**
@@ -102,7 +106,6 @@ const ChatadelicApi = function () {
       throw new Error('C_API _auth: no username/password/chat.');
     }
     const data = `chat=${_chat}&login=${encodeURI(_username)}&password=${encodeURI(_password)}&${(_sid ? `_=${+_sid}` : '')}`;
-    console.log(data);
     const req = http.request({
       host: 'chatadelic.net',
       path: '/login/chatLogin',
@@ -114,8 +117,8 @@ const ChatadelicApi = function () {
         Accept: 'application/json, text/javascript, */*; q=0.01',
         Origin: 'http://chatadelic.net',
         'X-Requested-With': 'XMLHttpRequest',
-        Referer: `http://chatadelic.net/frame.php?chat=${_chat}`,
-      },
+        Referer: `http://chatadelic.net/frame.php?chat=${_chat}`
+      }
     }, (res) => {
       res.setEncoding('utf8');
       res.on('data', (chunk) => {
@@ -149,7 +152,7 @@ const ChatadelicApi = function () {
         _com: 1,
         chat: _chat,
         need: 'state',
-        sid: _sid,
+        sid: _sid
       }));
       callback(e);
     });
@@ -167,7 +170,7 @@ const ChatadelicApi = function () {
     ws.send(JSON.stringify({
       chat: _chat,
       act: 'logout',
-      _id: _msgId++,
+      _id: _msgId++
     }));
     callback();
   };
@@ -188,7 +191,7 @@ const ChatadelicApi = function () {
       chat: _chat,
       act: 'msg',
       msg: message,
-      _id: _msgId++,
+      _id: _msgId++
     }));
     callback();
   };
@@ -209,61 +212,79 @@ const ChatadelicApi = function () {
       act: 'msg',
       msg: args[1],
       to: args[0],
-      _id: _msgId++,
+      _id: _msgId++
     }));
     callback();
   };
 
   /**
-   * Set queue execution interval
-   * If data and callback === undefined returns queue interval
-   * @param {string} [data]
-   * @param {function} [callback]
-   * @returns {number} queueInterval
+   * @param {number} data Queue execution interval
+   * @param {function} callback
+   * @returns {ChatadelicApi} Returns this to chain methods
    */
-  this.queueInterval = function (data, callback) {
+  this.setQueueInterval = function (data, callback) {
     self.queueAdd('queueInterval', data, callback);
-    if (!data && !callback) {
-      return _queueInterval;
-    }
+    return self;
   };
 
   /**
-   * Set chat id
-   * If data and callback === undefined returns chat id
-   * @param {string} [data]
-   * @param {function} [callback]
-   * @returns {string} username
+   * @returns {number} Queue execution interval
    */
-  this.chat = function (data, callback) {
+  this.getQuqueInterval = function () {
+    return _queueInterval;
+  };
+
+  /**
+   * @param {number} data Chat id
+   * @param {function} callback
+   * @returns {ChatadelicApi} Returns this to chain methods
+   */
+  this.setChat = function (data, callback) {
     self.queueAdd('chat', data, callback);
-    if (!data && !callback) {
-      return _chat;
-    }
+    return self;
   };
 
   /**
-   * Set username
-   * If data and callback === undefined returns username
-   * @param {string} [data]
-   * @param {function} [callback]
-   * @returns {string} username
+   * @return {number} Chat id
    */
-  this.username = function (data, callback) {
+  this.getChat = function () {
+    return _chat;
+  }
+
+  /**
+   * @param {string} data Username
+   * @param {function} callback
+   * @returns {ChatadelicApi} Returns this to chain methods
+   */
+  this.setUsername = function (data, callback) {
     self.queueAdd('username', data, callback);
-    if (!data && !callback) {
-      return _username;
-    }
+    return self;
   };
 
   /**
-   * Set password
-   * @param {string} data
-   * @param {function} [callback]
+   * @return {string} Username
    */
-  this.password = function (data, callback) {
+  this.getUsername = function () {
+    return _username;
+  }
+
+  /**
+   * @param {string} data Password
+   * @param {function} callback
+   * @returns {ChatadelicApi} Returns this to chain methods
+   */
+  this.setPassword = function (data, callback) {
     self.queueAdd('password', data, callback);
+    return self;
   };
+
+  /**
+   * DO NOT return password
+   * @return {string} Empty string
+   */
+  this.getPassword = function () {
+    return '';
+  }
 
   /**
    * Login
@@ -271,6 +292,7 @@ const ChatadelicApi = function () {
    */
   this.login = function (callback) {
     self.queueAdd('login', '', callback);
+    return self;
   };
 
   /**
@@ -279,6 +301,7 @@ const ChatadelicApi = function () {
    */
   this.logout = function (callback) {
     self.queueAdd('logout', '', callback);
+    return self;
   };
 
   /**
@@ -291,6 +314,7 @@ const ChatadelicApi = function () {
     for (let i = 0; i < arr.length; i++) {
       self.queueAdd('message', arr[i], callback);
     }
+    return self;
   };
 
   /**
@@ -304,6 +328,7 @@ const ChatadelicApi = function () {
     for (let i = 0; i < arr.length; i++) {
       self.queueAdd('privateMessage', [user, arr[i]], callback);
     }
+    return self;
   };
 
   /**
@@ -322,16 +347,16 @@ const ChatadelicApi = function () {
     _queue.push({
       type,
       data,
-      callback,
+      callback
     });
     _execQueue();
+    return self;
   };
 
   /**
-   * Return online list
-   * @returns {Array}
+   * @returns {Array} Online list
    */
-  this.online = function () {
+  this.getOnline = function () {
     return _online;
   };
 
@@ -340,7 +365,7 @@ const ChatadelicApi = function () {
    * @param {boolean} [ontimeout=false]
    * @private
    */
-  var _execQueue = function (ontimeout) {
+  const _execQueue = function (ontimeout) {
     if (ontimeout !== true && _queueIntervalTimeout !== null) {
       return;
     }
@@ -353,7 +378,7 @@ const ChatadelicApi = function () {
         _act[_queue[0].type](_queue[0].data, (e) => {
           _queue[0].callback(e);
           _queue.shift();
-          _queueIntervalTimeout = setTimeout(function () {
+          _queueIntervalTimeout = setTimeout(() => {
             _execQueue(true);
           }, _queueInterval);
         });
@@ -362,7 +387,7 @@ const ChatadelicApi = function () {
         _conf[_queue[0].type](_queue[0].data);
         _queue[0].callback();
         _queue.shift();
-        _queueIntervalTimeout = setTimeout(function () {
+        _queueIntervalTimeout = setTimeout(() => {
           _execQueue(true);
         }, 20);
       }
