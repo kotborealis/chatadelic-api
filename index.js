@@ -151,7 +151,7 @@ const ChatadelicApi = function () {
       ws.send(JSON.stringify({
         _com: 1,
         chat: _chat,
-        need: 'state',
+        need: !_onlineInited?'state':'',
         sid: _sid
       }));
       callback(e);
