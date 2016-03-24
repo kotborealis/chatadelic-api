@@ -1,6 +1,6 @@
 {
   "name": "chatadelic-api",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "chatadelic.net api",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/kotborealis/chatadelic-api#readme",
   "dependencies": {
-    "mokou-websocket": "^1.0.2"
+    "mokou-websocket": "kotborealis/mokou-websocket"
   }
 }
