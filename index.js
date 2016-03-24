@@ -19,7 +19,7 @@ const ChatadelicApi = function () {
   let _onlineInited = false;
 
   const _queue = [];
-  let _queueInterval = 500;
+  let _queueInterval = 250;
   let _queueIntervalTimeout = null;
 
   const _conf = {};
@@ -151,7 +151,7 @@ const ChatadelicApi = function () {
       ws.send(JSON.stringify({
         _com: 1,
         chat: _chat,
-        need: !_onlineInited?'state':'',
+        need: !_onlineInited ? 'state' : '',
         sid: _sid
       }));
       callback(e);
@@ -249,7 +249,7 @@ const ChatadelicApi = function () {
    */
   this.getChat = function () {
     return _chat;
-  }
+  };
 
   /**
    * @param {string} data Username
@@ -266,7 +266,7 @@ const ChatadelicApi = function () {
    */
   this.getUsername = function () {
     return _username;
-  }
+  };
 
   /**
    * @param {string} data Password
@@ -284,7 +284,7 @@ const ChatadelicApi = function () {
    */
   this.getPassword = function () {
     return '';
-  }
+  };
 
   /**
    * Login
