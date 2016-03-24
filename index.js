@@ -120,8 +120,13 @@ const ChatadelicApi = function () {
       res.setEncoding('utf8');
       res.on('data', (chunk) => {
         console.log(chunk);
-        const r = JSON.parse(chunk);
-        callback(r);
+        try {
+          const r = JSON.parse(chunk);
+          callback(r);
+        }
+        catch (e) {
+          callback({});
+        }
       });
     });
     req.write(data);
@@ -222,6 +227,8 @@ const ChatadelicApi = function () {
    * @returns {number} queueInterval
    */
   this.queueInterval = function (data, callback) {
+    callback = callback || function () {
+      };
     self.queueAdd('queueInterval', data, callback);
     if (!data && !callback) {
       return _queueInterval;
@@ -236,6 +243,8 @@ const ChatadelicApi = function () {
    * @returns {string} username
    */
   this.chat = function (data, callback) {
+    callback = callback || function () {
+      };
     self.queueAdd('chat', data, callback);
     if (!data && !callback) {
       return _chat;
@@ -250,6 +259,8 @@ const ChatadelicApi = function () {
    * @returns {string} username
    */
   this.username = function (data, callback) {
+    callback = callback || function () {
+      };
     self.queueAdd('username', data, callback);
     if (!data && !callback) {
       return _username;
@@ -262,6 +273,8 @@ const ChatadelicApi = function () {
    * @param {function} [callback]
    */
   this.password = function (data, callback) {
+    callback = callback || function () {
+      };
     self.queueAdd('password', data, callback);
   };
 
@@ -270,6 +283,8 @@ const ChatadelicApi = function () {
    * @param {function} [callback]
    */
   this.login = function (callback) {
+    callback = callback || function () {
+      };
     self.queueAdd('login', '', callback);
   };
 
@@ -278,6 +293,8 @@ const ChatadelicApi = function () {
    * @param {function} [callback]
    */
   this.logout = function (callback) {
+    callback = callback || function () {
+      };
     self.queueAdd('logout', '', callback);
   };
 
@@ -287,6 +304,8 @@ const ChatadelicApi = function () {
    * @param {function} [callback]
    */
   this.message = function (data, callback) {
+    callback = callback || function () {
+      };
     const arr = data.match(/.{1,300}/g);
     for (let i = 0; i < arr.length; i++) {
       self.queueAdd('message', arr[i], callback);
@@ -300,6 +319,8 @@ const ChatadelicApi = function () {
    * @param callback
    */
   this.privateMessage = function (user, message, callback) {
+    callback = callback || function () {
+      };
     const arr = message.match(/.{1,300}/g);
     for (let i = 0; i < arr.length; i++) {
       self.queueAdd('privateMessage', [user, arr[i]], callback);
