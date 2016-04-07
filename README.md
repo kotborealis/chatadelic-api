@@ -13,20 +13,22 @@
 <dt><a href="#onlogout">onlogout(e)</a></dt>
 <dd><p>Event on user logout</p>
 </dd>
-<dt><a href="#queueInterval">queueInterval([data], [callback])</a> ⇒ <code>string</code></dt>
-<dd><p>Set queue execution interval
-If data and callback === undefined returns queue interval</p>
-</dd>
-<dt><a href="#chat">chat([data], [callback])</a> ⇒ <code>string</code></dt>
-<dd><p>Set chat id
-If data and callback === undefined returns chat id</p>
-</dd>
-<dt><a href="#username">username([data], [callback])</a> ⇒ <code>string</code></dt>
-<dd><p>Set username
-If data and callback === undefined returns username</p>
-</dd>
-<dt><a href="#password">password(data, [callback])</a></dt>
-<dd><p>Set password</p>
+<dt><a href="#setQueueInterval">setQueueInterval(data, callback)</a> ⇒ <code>ChatadelicApi</code></dt>
+<dd></dd>
+<dt><a href="#getQuqueInterval">getQuqueInterval()</a> ⇒ <code>number</code></dt>
+<dd></dd>
+<dt><a href="#setChat">setChat(data, callback)</a> ⇒ <code>ChatadelicApi</code></dt>
+<dd></dd>
+<dt><a href="#getChat">getChat()</a> ⇒ <code>number</code></dt>
+<dd></dd>
+<dt><a href="#setUsername">setUsername(data, callback)</a> ⇒ <code>ChatadelicApi</code></dt>
+<dd></dd>
+<dt><a href="#getUsername">getUsername()</a> ⇒ <code>string</code></dt>
+<dd></dd>
+<dt><a href="#setPassword">setPassword(data, callback)</a> ⇒ <code>ChatadelicApi</code></dt>
+<dd></dd>
+<dt><a href="#getPassword">getPassword()</a> ⇒ <code>string</code></dt>
+<dd><p>DO NOT return password</p>
 </dd>
 <dt><a href="#login">login([callback])</a></dt>
 <dd><p>Login</p>
@@ -43,6 +45,8 @@ If data and callback === undefined returns username</p>
 <dt><a href="#queueAdd">queueAdd(type, [data], [callback])</a></dt>
 <dd><p>Add chatadelic act to queue</p>
 </dd>
+<dt><a href="#getOnline">getOnline()</a> ⇒ <code>Array</code></dt>
+<dd></dd>
 </dl>
 
 <a name="onopen"></a>
@@ -85,56 +89,64 @@ Event on user logout
 | --- | --- | --- |
 | e | <code>Object</code> | event |
 
-<a name="queueInterval"></a>
-## queueInterval([data], [callback]) ⇒ <code>string</code>
-Set queue execution interval
-If data and callback === undefined returns queue interval
+<a name="setQueueInterval"></a>
+## setQueueInterval(data, callback) ⇒ <code>ChatadelicApi</code>
+**Kind**: global function  
+**Returns**: <code>ChatadelicApi</code> - Returns this to chain methods  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>number</code> | Queue execution interval |
+| callback | <code>function</code> |  |
+
+<a name="getQuqueInterval"></a>
+## getQuqueInterval() ⇒ <code>number</code>
+**Kind**: global function  
+**Returns**: <code>number</code> - Queue execution interval  
+<a name="setChat"></a>
+## setChat(data, callback) ⇒ <code>ChatadelicApi</code>
+**Kind**: global function  
+**Returns**: <code>ChatadelicApi</code> - Returns this to chain methods  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>number</code> | Chat id |
+| callback | <code>function</code> |  |
+
+<a name="getChat"></a>
+## getChat() ⇒ <code>number</code>
+**Kind**: global function  
+**Returns**: <code>number</code> - Chat id  
+<a name="setUsername"></a>
+## setUsername(data, callback) ⇒ <code>ChatadelicApi</code>
+**Kind**: global function  
+**Returns**: <code>ChatadelicApi</code> - Returns this to chain methods  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>string</code> | Username |
+| callback | <code>function</code> |  |
+
+<a name="getUsername"></a>
+## getUsername() ⇒ <code>string</code>
+**Kind**: global function  
+**Returns**: <code>string</code> - Username  
+<a name="setPassword"></a>
+## setPassword(data, callback) ⇒ <code>ChatadelicApi</code>
+**Kind**: global function  
+**Returns**: <code>ChatadelicApi</code> - Returns this to chain methods  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>string</code> | Password |
+| callback | <code>function</code> |  |
+
+<a name="getPassword"></a>
+## getPassword() ⇒ <code>string</code>
+DO NOT return password
 
 **Kind**: global function  
-**Returns**: <code>string</code> - username  
-
-| Param | Type |
-| --- | --- |
-| [data] | <code>string</code> | 
-| [callback] | <code>function</code> | 
-
-<a name="chat"></a>
-## chat([data], [callback]) ⇒ <code>string</code>
-Set chat id
-If data and callback === undefined returns chat id
-
-**Kind**: global function  
-**Returns**: <code>string</code> - username  
-
-| Param | Type |
-| --- | --- |
-| [data] | <code>string</code> | 
-| [callback] | <code>function</code> | 
-
-<a name="username"></a>
-## username([data], [callback]) ⇒ <code>string</code>
-Set username
-If data and callback === undefined returns username
-
-**Kind**: global function  
-**Returns**: <code>string</code> - username  
-
-| Param | Type |
-| --- | --- |
-| [data] | <code>string</code> | 
-| [callback] | <code>function</code> | 
-
-<a name="password"></a>
-## password(data, [callback])
-Set password
-
-**Kind**: global function  
-
-| Param | Type |
-| --- | --- |
-| data | <code>string</code> | 
-| [callback] | <code>function</code> | 
-
+**Returns**: <code>string</code> - Empty string  
 <a name="login"></a>
 ## login([callback])
 Login
@@ -191,3 +203,7 @@ Add chatadelic act to queue
 | [data] | <code>string</code> | 
 | [callback] | <code>function</code> | 
 
+<a name="getOnline"></a>
+## getOnline() ⇒ <code>Array</code>
+**Kind**: global function  
+**Returns**: <code>Array</code> - Online list  
