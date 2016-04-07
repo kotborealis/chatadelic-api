@@ -229,7 +229,7 @@ const ChatadelicApi = function () {
   /**
    * @returns {number} Queue execution interval
    */
-  this.getQuqueInterval = function () {
+  this.getQueueInterval = function () {
     return _queueInterval;
   };
 

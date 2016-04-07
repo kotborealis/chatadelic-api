@@ -15,7 +15,7 @@
 </dd>
 <dt><a href="#setQueueInterval">setQueueInterval(data, callback)</a> ⇒ <code>ChatadelicApi</code></dt>
 <dd></dd>
-<dt><a href="#getQuqueInterval">getQuqueInterval()</a> ⇒ <code>number</code></dt>
+<dt><a href="#getQueueInterval">getQueueInterval()</a> ⇒ <code>number</code></dt>
 <dd></dd>
 <dt><a href="#setChat">setChat(data, callback)</a> ⇒ <code>ChatadelicApi</code></dt>
 <dd></dd>
@@ -99,8 +99,8 @@ Event on user logout
 | data | <code>number</code> | Queue execution interval |
 | callback | <code>function</code> |  |
 
-<a name="getQuqueInterval"></a>
-## getQuqueInterval() ⇒ <code>number</code>
+<a name="getQueueInterval"></a>
+## getQueueInterval() ⇒ <code>number</code>
 **Kind**: global function  
 **Returns**: <code>number</code> - Queue execution interval  
 <a name="setChat"></a>
