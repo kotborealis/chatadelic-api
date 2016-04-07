@@ -122,7 +122,6 @@ const ChatadelicApi = function () {
     }, (res) => {
       res.setEncoding('utf8');
       res.on('data', (chunk) => {
-        console.log(chunk);
         const r = JSON.parse(chunk);
         callback(r);
       });
