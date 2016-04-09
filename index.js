@@ -147,14 +147,25 @@ const ChatadelicApi = function () {
         throw new Error('C_API _act.login: login failed (no sid).');
       }
       _sid = e._;
-      ws.send(JSON.stringify({
-        _com: 1,
-        chat: _chat,
-        need: !_onlineInited ? 'state' : '',
-        sid: _sid
-      }));
-      callback(e);
+      _act.init(_sid, callback);
     });
+  };
+
+  /**
+   * Init chatadelic session
+   * @param {string} data
+   * @param {function} [callback]
+   */
+  _act.init = function (data, callback) {
+    callback = callback || function () {
+      };
+    ws.send(JSON.stringify({
+      _com: 1,
+      chat: _chat,
+      need: !_onlineInited ? 'state' : '',
+      sid: data || ""
+    }));
+    callback();
   };
 
   /**
@@ -283,6 +294,14 @@ const ChatadelicApi = function () {
    */
   this.getPassword = function () {
     return '';
+  };
+
+  /**
+   * Init chatadelcic session
+   * @param callback
+   */
+  this.init = function (callback) {
+    self.queueAdd('init', _sid || "");
   };
 
   /**
