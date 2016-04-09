@@ -30,6 +30,9 @@
 <dt><a href="#getPassword">getPassword()</a> ⇒ <code>string</code></dt>
 <dd><p>DO NOT return password</p>
 </dd>
+<dt><a href="#init">init(callback)</a></dt>
+<dd><p>Init chatadelcic session</p>
+</dd>
 <dt><a href="#login">login([callback])</a></dt>
 <dd><p>Login</p>
 </dd>
@@ -147,6 +150,16 @@ DO NOT return password
 
 **Kind**: global function  
 **Returns**: <code>string</code> - Empty string  
+<a name="init"></a>
+## init(callback)
+Init chatadelcic session
+
+**Kind**: global function  
+
+| Param |
+| --- |
+| callback | 
+
 <a name="login"></a>
 ## login([callback])
 Login
