@@ -105,7 +105,7 @@ const ChatadelicApi = function () {
     if (!_username || !_password || !_chat) {
       throw new Error('C_API _auth: no username/password/chat.');
     }
-    const data = `chat=${_chat}&login=${encodeURI(_username)}&password=${encodeURI(_password)}&${(_sid ? `_=${+_sid}` : '')}`;
+    const data = `chat=${_chat}&login=${encodeURI(_username)}&password=${encodeURI(_password)}&${(_sid ? `_=${_sid}` : '')}`;
     const req = http.request({
       host: 'chatadelic.net',
       path: '/login/chatLogin',
@@ -502,6 +502,7 @@ const ChatadelicApi = function () {
     self.emit('open');
     self.onopen();
     ws.on('message', (e) => {
+      console.log(e);
       let data = JSON.parse(e);
       if (!_onlineInited) {
         _initOnline(data);
