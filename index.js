@@ -502,7 +502,6 @@ const ChatadelicApi = function () {
     self.emit('open');
     self.onopen();
     ws.on('message', (e) => {
-      console.log(e);
       let data = JSON.parse(e);
       if (!_onlineInited) {
         _initOnline(data);
