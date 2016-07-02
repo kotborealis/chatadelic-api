@@ -297,10 +297,9 @@ const ChatadelicApi = function () {
   };
 
   /**
-   * Init chatadelcic session
-   * @param callback
+   * Init chatadelic session
    */
-  this.init = function (callback) {
+  this.init = function () {
     self.queueAdd('init', _sid || "");
   };
 
@@ -328,7 +327,7 @@ const ChatadelicApi = function () {
    * @param {function} [callback]
    */
   this.message = function (data, callback) {
-    const arr = data.match(/.{1,300}/g);
+    const arr = data.toString().match(/.{1,300}/g);
     for (let i = 0; i < arr.length; i++) {
       self.queueAdd('message', arr[i], callback);
     }
