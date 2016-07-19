@@ -342,16 +342,15 @@ const ChatadelicApi = function () {
    */
   this.privateMessage = function (user, message, callback) {
     const arr = message.match(/.{1,300}/g);
-    for (let i = 0; i < arr.length; i++) {
+    for (let i = 0; i < arr.length; i++)
       self.queueAdd('privateMessage', [user, arr[i]], callback);
-    }
     return self;
   };
 
   /**
    * Add chatadelic act to queue
    * @param  {string} type
-   * @param  {string} [data]
+   * @param  {*} [data]
    * @param {function} [callback]
    * @public
    */
@@ -427,30 +426,22 @@ const ChatadelicApi = function () {
    * @private
    */
   const _handleData = function (data) {
-    let e;
     if (data.t === 'user' && (data.event === 'IN' || data.event === 'OUT')) {
-      e = data.user;
+      const e = data.user;
       data.event === 'IN' ? _addOnline(data) : _removeOnline(data);
+
       self.emit('log' + data.event.toLowerCase(), e);
       self['onlog' + data.event.toLowerCase()](e);
+      return;
     }
-    else if (data.t === 'msg' && !!data.c) {
-      e = {
-        private: true,
-        user: {name: data.from, regId: data.fromId ? data.fromId : -1},
-        text: data.text,
-        ts: data.ts
-      };
-      self.emit('message', e);
-      self.onmessage(e);
-    }
-    else if (data.t === 'msg') {
-      e = {
-        private: false,
+    if (data.t === 'msg') {
+      const e = {
         user: data.from,
         text: data.text,
         ts: data.ts
       };
+      e.private = !!data.c;
+
       self.emit('message', e);
       self.onmessage(e);
     }
@@ -462,12 +453,10 @@ const ChatadelicApi = function () {
    * @private
    */
   const _initOnline = function (data) {
-    if (Array.isArray(data)) {
-      for (let i = 0; i < data.length; i++) { //noinspection JSValidateTypes
+    if (Array.isArray(data))
+      for (let i = 0; i < data.length; i++) //noinspection JSValidateTypes
         if (data[i].t === 'user' && data[i].event === 'IN')
           _addOnline(data[i]);
-        }
-    }
     _onlineInited = true;
   };
 
@@ -477,11 +466,10 @@ const ChatadelicApi = function () {
    * @private
    */
   const _addOnline = function (data) {
-    data.user.regId = data.user.regId ? data.user.regId : -1;
     for (let j = 0; j < _online.length; j++)
-      if (_online[j].name === data.user.name && _online[j].regId === data.user.regId)
+      if (_online[j] === data.user.name)
         return;
-    _online.push(data.user);
+    _online.push(data.user.name);
   };
   /**
    * Remove user from online list
@@ -489,9 +477,8 @@ const ChatadelicApi = function () {
    * @private
    */
   const _removeOnline = function (data) {
-    data.user.regId = data.user.regId ? data.user.regId : -1;
     for (let j = 0; j < _online.length; j++)
-      if (_online[j].name === data.user.name && _online[j].regId === data.user.regId) {
+      if (_online[j] === data.user.name) {
         _online.splice(j, 1);
         break;
       }
