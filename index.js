@@ -3,511 +3,154 @@
 const WebSocket = require('mokou-websocket');
 const Events = require('events');
 const util = require('util');
-const http = require('http');
 
-const ChatadelicApi = function () {
-  const self = this;
-  const ws = new WebSocket('ws://chatadelic.net:8181/server/ws');
+const Online = require('./lib/online');
+const Queue = require('./lib/queue');
+const Methods = require('./lib/methods');
 
-  let _sid = null;
-  let _username = null;
-  let _password = null;
-  let _chat = null;
-  let _msgId = 0;
+/**
+ *
+ * @callback {ChatadelicApiCallback}
+ * @param {Boolean} error
+ * @param (Object} data
+ */
 
-  const _online = [];
-  let _onlineInited = false;
+/**
+ *
+ * @param conf
+ * @param {String} conf.username
+ * @param {String} conf.password
+ * @param {Number} conf.chat
+ * @param {Number} [conf.interval]
+ * @constructor
+ */
+const ChatadelicApi = function (conf) {
+    if (
+        !conf.hasOwnProperty('username') || !conf.hasOwnProperty('password') || !conf.hasOwnProperty('chat')
+    )
+        throw new Error('Invalid config!');
 
-  const _queue = [];
-  let _queueInterval = 250;
-  let _queueIntervalTimeout = null;
+    const ws = new WebSocket('ws://chatadelic.net:8181/server/ws');
 
-  const _conf = {};
-  const _act = {};
+    const methods = new Methods(ws, conf);
 
-  /**
-   * Event on websocket open
-   * @param {Object} e - event
-   */
-  this.onopen = function (e) {
-    return e;
-  };
-  /**
-   * Event on chat message
-   * @param {Object} e - event
-   */
-  this.onmessage = function (e) {
-    return e;
-  };
-  /**
-   * Event on user login
-   * @param {Object} e - event
-   */
-  this.onlogin = function (e) {
-    return e;
-  };
-  /**
-   * Event on user logout
-   * @param {Object} e - event
-   */
-  this.onlogout = function (e) {
-    return e;
-  };
+    const online = new Online();
+    const queue = new Queue(methods, conf.interval);
 
-  /**
-   * @param  {int} arg
-   * @private
-   */
-  _conf.queueInterval = function (arg) {
-    if (arg !== undefined && arg !== null && arg >= 0) {
-      _queueInterval = arg;
-    }
-  };
-
-  /**
-   * @param {number} arg
-   * @private
-   */
-  _conf.chat = function (arg) {
-    if (arg !== undefined && arg !== null && arg >= 0) {
-      _chat = arg;
-    }
-  };
-
-  /**
-   * @param {string} arg
-   * @private
-   */
-  _conf.username = function (arg) {
-    if (arg !== undefined && arg !== null && arg !== '') {
-      _username = arg;
-    }
-  };
-
-  /**
-   * @param {string} arg
-   * @private
-   */
-  _conf.password = function (arg) {
-    if (arg !== undefined && arg !== null && arg !== '') {
-      _password = arg;
-    }
-  };
-
-  /**
-   * Login into chat and get chatadelic response with session token
-   * @param {function} [callback]
-   * @private
-   */
-  const _auth = function (callback) {
-    callback = callback || function () {
-      };
-    if (!_username || !_password || !_chat) {
-      throw new Error('C_API _auth: no username/password/chat.');
-    }
-    const data = `chat=${_chat}&login=${encodeURI(_username)}&password=${encodeURI(_password)}&${(_sid ? `_=${_sid}` : '')}`;
-    const req = http.request({
-      host: 'chatadelic.net',
-      path: '/login/chatLogin',
-      method: 'POST',
-      headers: {
-        Connection: 'keep-alive',
-        'Content-Length': data.length,
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        Accept: 'application/json, text/javascript, */*; q=0.01',
-        Origin: 'http://chatadelic.net',
-        'X-Requested-With': 'XMLHttpRequest',
-        Referer: `http://chatadelic.net/frame.php?chat=${_chat}`
-      }
-    }, (res) => {
-      res.setEncoding('utf8');
-      res.on('data', (chunk) => {
-        const r = JSON.parse(chunk);
-        callback(r);
-      });
+    ws.on('open', (e)=> {
+        this.emit('open', e);
     });
-    req.write(data);
-    req.end();
-  };
 
-  /**
-   * Chatadelic actions (like send message, login, etc)
-   */
-  /**
-   * Login into chat
-   * @param {string} data
-   * @param {function} [callback]
-   * @private
-   */
-  _act.login = function (data, callback) {
-    callback = callback || function () {
-      };
-    _auth((e) => {
-      if (!e._) {
-        throw new Error('C_API _act.login: login failed (no sid).');
-      }
-      _sid = e._;
-      _act.init(_sid, callback);
+    ws.on('close', (e)=> {
+        this.emit('close', e);
     });
-  };
 
-  /**
-   * Init chatadelic session
-   * @param {string} data
-   * @param {function} [callback]
-   */
-  _act.init = function (data, callback) {
-    callback = callback || function () {
-      };
-    ws.send(JSON.stringify({
-      _com: 1,
-      chat: _chat,
-      need: !_onlineInited ? 'state' : '',
-      sid: data || ""
-    }));
-    callback();
-  };
-
-  /**
-   *  Logout from chat
-   *  @param {string} data
-   *  @param {function} [callback]
-   *  @private
-   */
-  _act.logout = function (data, callback) {
-    callback = callback || function () {
-      };
-    ws.send(JSON.stringify({
-      chat: _chat,
-      act: 'logout',
-      _id: _msgId++
-    }));
-    callback();
-  };
-
-  /**
-   * Send message
-   * @param  {string} message
-   * @param  {function} [callback]
-   * @private
-   */
-  _act.message = function (message, callback) {
-    callback = callback || function () {
-      };
-    if (!message) {
-      return;
-    }
-    ws.send(JSON.stringify({
-      chat: _chat,
-      act: 'msg',
-      msg: message,
-      _id: _msgId++
-    }));
-    callback();
-  };
-
-  /**
-   * Send private message to user
-   * @param {Object} args (user, message)
-   * @param {function} [callback]
-   */
-  _act.privateMessage = function (args, callback) {
-    callback = callback || function () {
-      };
-    if (!args || !args[0] || !args[1]) {
-      return;
-    }
-    ws.send(JSON.stringify({
-      chat: _chat,
-      act: 'msg',
-      msg: args[1],
-      to: args[0],
-      _id: _msgId++
-    }));
-    callback();
-  };
-
-  /**
-   * @param {number} data Queue execution interval
-   * @param {function} callback
-   * @returns {ChatadelicApi} Returns this to chain methods
-   */
-  this.setQueueInterval = function (data, callback) {
-    self.queueAdd('queueInterval', data, callback);
-    return self;
-  };
-
-  /**
-   * @returns {number} Queue execution interval
-   */
-  this.getQueueInterval = function () {
-    return _queueInterval;
-  };
-
-  /**
-   * @param {number} data Chat id
-   * @param {function} callback
-   * @returns {ChatadelicApi} Returns this to chain methods
-   */
-  this.setChat = function (data, callback) {
-    self.queueAdd('chat', data, callback);
-    return self;
-  };
-
-  /**
-   * @return {number} Chat id
-   */
-  this.getChat = function () {
-    return _chat;
-  };
-
-  /**
-   * @param {string} data Username
-   * @param {function} callback
-   * @returns {ChatadelicApi} Returns this to chain methods
-   */
-  this.setUsername = function (data, callback) {
-    self.queueAdd('username', data, callback);
-    return self;
-  };
-
-  /**
-   * @return {string} Username
-   */
-  this.getUsername = function () {
-    return _username;
-  };
-
-  /**
-   * @param {string} data Password
-   * @param {function} callback
-   * @returns {ChatadelicApi} Returns this to chain methods
-   */
-  this.setPassword = function (data, callback) {
-    self.queueAdd('password', data, callback);
-    return self;
-  };
-
-  /**
-   * DO NOT return password
-   * @return {string} Empty string
-   */
-  this.getPassword = function () {
-    return '';
-  };
-
-  /**
-   * Init chatadelic session
-   */
-  this.init = function () {
-    self.queueAdd('init', _sid || "");
-  };
-
-  /**
-   * Login
-   * @param {function} [callback]
-   */
-  this.login = function (callback) {
-    self.queueAdd('login', '', callback);
-    return self;
-  };
-
-  /**
-   * Logout
-   * @param {function} [callback]
-   */
-  this.logout = function (callback) {
-    self.queueAdd('logout', '', callback);
-    return self;
-  };
-
-  /**
-   * Send message
-   * @param {string} data
-   * @param {function} [callback]
-   */
-  this.message = function (data, callback) {
-    const arr = data.toString().match(/.{1,300}/g);
-    for (let i = 0; i < arr.length; i++) {
-      self.queueAdd('message', arr[i], callback);
-    }
-    return self;
-  };
-
-  /**
-   * Send private message to user
-   * @param user
-   * @param message
-   * @param callback
-   */
-  this.privateMessage = function (user, message, callback) {
-    const arr = message.match(/.{1,300}/g);
-    for (let i = 0; i < arr.length; i++)
-      self.queueAdd('privateMessage', [user, arr[i]], callback);
-    return self;
-  };
-
-  /**
-   * Add chatadelic act to queue
-   * @param  {string} type
-   * @param  {*} [data]
-   * @param {function} [callback]
-   * @public
-   */
-  this.queueAdd = function (type, data, callback) {
-    callback = callback || function () {
-      };
-    if (!_act.hasOwnProperty(type) && !_conf.hasOwnProperty(type)) {
-      throw new Error('C_API queueAdd: invalid type');
-    }
-    _queue.push({
-      type,
-      data,
-      callback
+    ws.on('error', (e)=> {
+        this.emit('error', e);
     });
-    _execQueue();
-    return self;
-  };
 
-  /**
-   * @returns {Array} Online list
-   */
-  this.getOnline = function () {
-    return _online;
-  };
+    ws.on('message', (e)=> {
+        try {
+            const data = JSON.parse(e);
+            if (online.needToInit) {
+                online.add(data);
+                online.needToInit = false;
 
-  /**
-   * Execute added to queue acts
-   * @param {boolean} [ontimeout=false]
-   * @private
-   */
-  const _execQueue = function (ontimeout) {
-    if (ontimeout !== true && _queueIntervalTimeout !== null) {
-      return;
-    }
-    if (_queue.length === 0) {
-      _queueIntervalTimeout = null;
-
-    }
-    else {
-      if (_act.hasOwnProperty(_queue[0].type)) {
-        _act[_queue[0].type](_queue[0].data, (e) => {
-          _queue[0].callback(e);
-          _queue.shift();
-          _queueIntervalTimeout = setTimeout(() => {
-            _execQueue(true);
-          }, _queueInterval);
-        });
-      }
-      else if (_conf.hasOwnProperty(_queue[0].type)) {
-        _conf[_queue[0].type](_queue[0].data);
-        _queue[0].callback();
-        _queue.shift();
-        _queueIntervalTimeout = setTimeout(() => {
-          _execQueue(true);
-        }, 20);
-      }
-      else {
-        throw 'C_API _execQueue: invalid type';
-      }
-    }
-  };
-
-  /**
-   * Handles data from chatadelic and calls events
-   * @param {object} data
-   * @param data.t
-   * @param data.event
-   * @param data.from
-   * @param data.text
-   * @param data.ts
-   * @param data.user
-   * @param data.fromId
-   * @private
-   */
-  const _handleData = function (data) {
-    if (data.t === 'user' && (data.event === 'IN' || data.event === 'OUT')) {
-      const e = data.user;
-      data.event === 'IN' ? _addOnline(data) : _removeOnline(data);
-
-      self.emit('log' + data.event.toLowerCase(), e);
-      self['onlog' + data.event.toLowerCase()](e);
-      return;
-    }
-    if (data.t === 'msg') {
-      const e = {
-        user: data.from,
-        text: data.text,
-        ts: data.ts
-      };
-      e.private = !!data.c;
-
-      self.emit('message', e);
-      self.onmessage(e);
-    }
-  };
-
-  /**
-   * Init online list
-   * @param data
-   * @private
-   */
-  const _initOnline = function (data) {
-    if (Array.isArray(data))
-      for (let i = 0; i < data.length; i++) //noinspection JSValidateTypes
-        if (data[i].t === 'user' && data[i].event === 'IN')
-          _addOnline(data[i]);
-    _onlineInited = true;
-  };
-
-  /**
-   * Add user to online list
-   * @param data
-   * @private
-   */
-  const _addOnline = function (data) {
-    for (let j = 0; j < _online.length; j++)
-      if (_online[j] === data.user.name)
-        return;
-    _online.push(data.user.name);
-  };
-  /**
-   * Remove user from online list
-   * @param data
-   * @private
-   */
-  const _removeOnline = function (data) {
-    for (let j = 0; j < _online.length; j++)
-      if (_online[j] === data.user.name) {
-        _online.splice(j, 1);
-        break;
-      }
-  };
-
-  ws.onopen = function () {
-    self.emit('open');
-    self.onopen();
-    ws.on('message', (e) => {
-      let data = JSON.parse(e);
-      if (!_onlineInited) {
-        _initOnline(data);
-        return;
-      }
-      if (Array.isArray(data)) {
-        for (let i = 0; i < data.length; i++) {
-          _handleData(data[i]);
+            }
+            else if (Array.isArray(data)) {
+                data.forEach(handleData);
+            }
         }
-      }
+        catch (e) {
+            console.log("err", e);
+            this.emit('error', e);
+        }
     });
-    ws.on('close', (e) => {
-      self.emit('close', e);
-      self.onclose(e);
-    });
-    ws.on('error', (e) => {
-      self.emit('error', e);
-      self.onerror(e);
-    });
-  };
+
+    const handleData = (data)=> {
+        if (data.t === 'user' && data.event === 'IN') {
+            online.add(data);
+            this.emit('onlogin', data.user.name);
+            return;
+        }
+        if (data.t === 'user' && data.event === 'OUT') {
+            online.remove(data);
+            this.emit('onlogout', data.user.name);
+            return;
+        }
+        if (data.t === 'msg') {
+            const e = {
+                user: data.from,
+                text: data.text,
+                ts: data.ts
+            };
+            e.private = !!data.c;
+
+            this.emit('message', e);
+        }
+    };
+
+    /**
+     *
+     * @param {ChatadelicApiCallback} callback
+     * @returns {ChatadelicApi}
+     */
+    this.login = (callback)=> {
+        queue.push({
+            type: 'login',
+            data: {},
+            callback: callback || function () {
+            }
+        });
+        return this;
+    };
+    /**
+     *
+     * @param {ChatadelicApiCallback} callback
+     * @returns {ChatadelicApi}
+     */
+    this.logout = (callback)=> {
+        queue.push({
+            type: 'logout',
+            data: {},
+            callback: callback || function () {
+            }
+        });
+        return this;
+    };
+    /**
+     *
+     * @param {String|Object} obj Message text or object
+     * @param {String} obj.text Message text
+     * @param {String} [obj.target] Target of message (use this to send private messages)
+     * @param {ChatadelicApiCallback} callback
+     * @returns {ChatadelicApi}
+     */
+    this.message = (obj, callback)=> {
+        if (typeof obj === 'string')
+            obj = {text: obj};
+        queue.push({
+            type: 'message',
+            data: {
+                text: obj.text ? obj.text.toString() : '',
+                target: obj.target ? obj.target.toString() : false
+            },
+            callback: callback || function () {
+            }
+        });
+        return this;
+    };
+    /**
+     * Get online list
+     * @param {ChatadelicApiCallback} callback
+     * @returns {String[]}
+     */
+    this.getOnline = (callback)=> {
+        const _ = online.toArray();
+        if (callback)
+            callback(null, _);
+        return _;
+    };
 };
 util.inherits(ChatadelicApi, Events);
 
