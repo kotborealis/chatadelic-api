@@ -33,7 +33,6 @@ const ChatadelicApi = function (conf) {
     const ws = new WebSocket('ws://chatadelic.net:8181/server/ws');
 
     const methods = new Methods(ws, conf);
-
     const online = new Online();
     const queue = new Queue(methods, conf.interval);
 
