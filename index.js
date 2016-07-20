@@ -92,7 +92,7 @@ const ChatadelicApi = function (conf) {
 
     /**
      *
-     * @param {ChatadelicApiCallback} callback
+     * @param {ChatadelicApiCallback} [callback]
      * @returns {ChatadelicApi}
      */
     this.login = (callback)=> {
@@ -106,7 +106,7 @@ const ChatadelicApi = function (conf) {
     };
     /**
      *
-     * @param {ChatadelicApiCallback} callback
+     * @param {ChatadelicApiCallback} [callback]
      * @returns {ChatadelicApi}
      */
     this.logout = (callback)=> {
@@ -123,26 +123,29 @@ const ChatadelicApi = function (conf) {
      * @param {String|Object} obj Message text or object
      * @param {String} obj.text Message text
      * @param {String} [obj.target] Target of message (use this to send private messages)
-     * @param {ChatadelicApiCallback} callback
+     * @param {ChatadelicApiCallback} [callback]
      * @returns {ChatadelicApi}
      */
     this.message = (obj, callback)=> {
-        if (typeof obj === 'string')
-            obj = {text: obj};
-        queue.push({
-            type: 'message',
-            data: {
-                text: obj.text ? obj.text.toString() : '',
-                target: obj.target ? obj.target.toString() : false
-            },
-            callback: callback || function () {
-            }
+        if (typeof obj === 'string' || typeof obj === 'number')
+            obj = {text: obj.toString()};
+
+        obj.text.match(/.{1,300}/g).forEach(str=> {
+            queue.push({
+                type: 'message',
+                data: {
+                    text: str ? str : '',
+                    target: obj.target ? obj.target.toString() : false
+                },
+                callback: callback || function () {
+                }
+            });
         });
         return this;
     };
     /**
      * Get online list
-     * @param {ChatadelicApiCallback} callback
+     * @param {ChatadelicApiCallback} [callback]
      * @returns {String[]}
      */
     this.getOnline = (callback)=> {
