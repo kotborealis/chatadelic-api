@@ -129,7 +129,7 @@ const ChatadelicApi = function (conf) {
         if (typeof obj === 'string' || typeof obj === 'number')
             obj = {text: obj.toString()};
 
-        obj.text.match(/.{1,300}/g).forEach(str=> {
+        obj.text.match(/.{0,300}/g).forEach(str=> {
             queue.push({
                 type: 'message',
                 data: {
